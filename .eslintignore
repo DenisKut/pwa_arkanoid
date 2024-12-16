@@ -1,0 +1,11 @@
+.next
+.cache
+.storybook
+package-lock.json
+public
+prisma
+node_modules
+next-env.d.ts
+next.config.ts
+lint-staged.config.js
+bun.lockb
