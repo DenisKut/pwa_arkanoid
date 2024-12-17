@@ -1,6 +1,8 @@
+/* eslint-disable no-undef */
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -18,8 +20,8 @@ export default defineConfig({
       name: 'Arkanoid',
       short_name: 'ArkBite',
       description: 'Demo version of PWA arkanoid game',
-      theme_color: '#484444',
-      background_color: '#394dc1',
+      theme_color: '#394dc1',
+      background_color: '#484444',
       display: 'standalone',
       orientation: 'portrait',
       icons: [
@@ -54,4 +56,13 @@ export default defineConfig({
       type: 'module',
     },
   })],
+  resolve: {
+      alias: {
+      "@": path.join(__dirname, "/src"),
+      components: path.join(__dirname, "/src/components"),
+      ui: path.join(__dirname, "/src", "/components/ui"),
+      pages: path.join(__dirname, "/src/pages"),
+      utils: path.join(__dirname, "/src/utils"),
+    },
+  },
 })
