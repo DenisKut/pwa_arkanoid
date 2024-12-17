@@ -1,3 +1,7 @@
+// import { COLORS } from '@'
+
+import { COLORS } from './src/constants/color.constants.js'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -5,7 +9,9 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: COLORS,
+    },
   },
   plugins: [],
 }

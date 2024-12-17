@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 import react from '@vitejs/plugin-react'
+import path from 'path'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -58,7 +58,7 @@ export default defineConfig({
   })],
   resolve: {
       alias: {
-      "@": path.join(__dirname, "/src"),
+      "@": path.join(__dirname, "/src/*"),
       components: path.join(__dirname, "/src/components"),
       ui: path.join(__dirname, "/src", "/components/ui"),
       pages: path.join(__dirname, "/src/pages"),
