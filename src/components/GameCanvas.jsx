@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
-import ballSvg from "../../public/assets/gameTextures/ball.svg"
-import blockSvg5 from "../../public/assets/gameTextures/brick_bomb.svg"
-import blockSvg3 from "../../public/assets/gameTextures/brick_cyan.svg"
-import blockSvg4 from "../../public/assets/gameTextures/brick_green.svg"
-import blockSvg1 from "../../public/assets/gameTextures/brick_orange.svg"
-import blockSvg2 from "../../public/assets/gameTextures/brick_purple.svg"
-import paddleSvg from "../../public/assets/gameTextures/paddle.svg"
-import explosionSound from '../../public/assets/sounds/boom.wav'
-import bounceSound from '../../public/assets/sounds/bounce.wav'
-import destroySound from '../../public/assets/sounds/destroy.wav'
-import backgroundMusic from '../../public/assets/sounds/NEFFEX_Numb.mp3'
+import { useEffect, useRef, useState } from 'react';
+import ballSvg from "/assets/gameTextures/ball.svg";
+import blockSvg5 from "/assets/gameTextures/brick_bomb.svg";
+import blockSvg3 from "/assets/gameTextures/brick_cyan.svg";
+import blockSvg4 from "/assets/gameTextures/brick_green.svg";
+import blockSvg1 from "/assets/gameTextures/brick_orange.svg";
+import blockSvg2 from "/assets/gameTextures/brick_purple.svg";
+import paddleSvg from "/assets/gameTextures/paddle.svg";
+import explosionSound from '/assets/sounds/boom.wav';
+import bounceSound from '/assets/sounds/bounce.wav';
+import destroySound from '/assets/sounds/destroy.wav';
+import backgroundMusic from '/assets/sounds/NEFFEX_Numb.mp3';
 
 const levels = [
   [
@@ -37,7 +37,7 @@ const GameCanvas = () => {
   let ballOnPaddle = true;
   let bricks = [];
   const paddle = { x: 128, y: 600, width: 104, height: 24, dx: 0, speed: 4 };
-  const ball = { x: 180, y: 580, radius: 10, dx: 0, dy: 0, speed: 3 };
+  const ball = { x: 180, y: 580, radius: 10, dx: 0, dy: 0, speed: 6 };
 
   const sounds = {
     bounce: new Audio(bounceSound),
@@ -61,9 +61,7 @@ const GameCanvas = () => {
 
   const loadLevel = () => {
     bricks = [];
-    // const rows = levels[0].length;
     const cols = levels[0][0].length;
-
     const totalBrickWidth = cols * (brickWidth + brickGap) - brickGap;
     const startX = (canvasWidth - totalBrickWidth) / 2;
 
@@ -92,15 +90,11 @@ const GameCanvas = () => {
 
   const toggleMusic = () => {
     setMusicMuted(!musicMuted);
-    if (sounds.music.volume == 1) {
-      sounds.music.volume = 0;
-    } else {
-      sounds.music.volume = 1;
-    }
+    sounds.music.muted = !musicMuted;
   };
 
   const applyExplosion = (brickIndex) => {
-    const explosionTargets = [-1, 1, -7, 7, -8, -6, 6, 8]; // Соседние блоки
+    const explosionTargets = [-1, 1, -7, 7, -8, -6, 6, 8];
     explosionTargets.forEach((offset) => {
       const neighbor = bricks[brickIndex + offset];
       if (neighbor && neighbor.strength > 0) {
@@ -111,6 +105,8 @@ const GameCanvas = () => {
   };
 
   const loop = () => {
+    if (lives <= 0) return; // Окончание игры если жизней нет
+
     context.clearRect(0, 0, canvasWidth, canvasHeight);
 
     // Движение платформы
@@ -135,7 +131,7 @@ const GameCanvas = () => {
       // Потеря жизни
       if (ball.y > canvasHeight) {
         setLives((prev) => prev - 1);
-        resetBall();
+        resetBall(); // Сбросить мяч и скорость платформы, если осталось жизни
         return;
       }
 
@@ -215,7 +211,7 @@ const GameCanvas = () => {
     context = canvas.getContext("2d");
     loadLevel();
     resetBall();
-		sounds.music.volume = 0.5;
+    sounds.music.volume = 0.5;
     sounds.music.loop = true;
     sounds.music.play();
 
@@ -237,8 +233,8 @@ const GameCanvas = () => {
   return (
     <div>
       <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} />
-      <div>Lives: {lives}</div>
-      <div>Score: {score}</div>
+      <div>Жизни: {lives}</div>
+      <div>Счет: {score}</div>
       <button onClick={toggleMusic}>{musicMuted ? "Включить музыку" : "Заглушить музыку"}</button>
     </div>
   );
