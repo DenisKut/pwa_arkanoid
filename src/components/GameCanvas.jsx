@@ -1,22 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
-import ballSvg from "/assets/gameTextures/ball.svg";
-import blockSvg5 from "/assets/gameTextures/brick_bomb.svg";
-import blockSvg3 from "/assets/gameTextures/brick_cyan.svg";
-import blockSvg4 from "/assets/gameTextures/brick_green.svg";
-import blockSvg1 from "/assets/gameTextures/brick_orange.svg";
-import blockSvg2 from "/assets/gameTextures/brick_purple.svg";
-import paddleSvg from "/assets/gameTextures/paddle.svg";
-import explosionSound from '/assets/sounds/boom.wav';
-import bounceSound from '/assets/sounds/bounce.wav';
-import destroySound from '/assets/sounds/destroy.wav';
-import backgroundMusic from '/assets/sounds/NEFFEX_Numb.mp3';
+import { useEffect, useRef, useState } from 'react'
+import ballSvg from "/assets/gameTextures/ball.svg"
+import blockSvg5 from "/assets/gameTextures/brick_bomb.svg"
+import blockSvg3 from "/assets/gameTextures/brick_cyan.svg"
+import blockSvg4 from "/assets/gameTextures/brick_green.svg"
+import blockSvg1 from "/assets/gameTextures/brick_orange.svg"
+import blockSvg2 from "/assets/gameTextures/brick_purple.svg"
+import paddleSvg from "/assets/gameTextures/paddle.svg"
+import explosionSound from '/assets/sounds/boom.wav'
+import bounceSound from '/assets/sounds/bounce.wav'
+import destroySound from '/assets/sounds/destroy.wav'
+import backgroundMusic from '/assets/sounds/NEFFEX_Numb.mp3'
 
 const levels = [
   [
     [0, 4, 4, 5, 4, 4, 0],
     [3, 3, 3, 3, 3, 3, 3],
     [2, 2, 2, 2, 2, 2, 2],
-    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 5, 1, 1, 1],
   ],
 ];
 
@@ -175,6 +175,7 @@ const GameCanvas = () => {
           ball.dy *= -1;
           if (brick.strength === 5) {
             applyExplosion(index);
+            sounds.explosion.play();
           } else {
             sounds.destroy.currentTime = 0;
             sounds.destroy.play();
