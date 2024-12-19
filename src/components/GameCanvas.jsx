@@ -13,29 +13,29 @@ import destroySound from '/assets/sounds/destroy.wav'
 const levels = [
   {
     blocks: [
-      [0, 0, 0, 5, 0, 0, 0]
-      // [0, 5, 4, 5, 4, 5, 0],
-      // [3, 3, 3, 3, 3, 3, 3],
-      // [2, 5, 2, 2, 2, 5, 2],
-      // [1, 1, 1, 5, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [2, 3, 4, 5, 4, 3, 2],
+      [3, 4, 5, 0, 5, 4, 3],
+      [4, 5, 0, 0, 0, 5, 4],
     ],
     music: '/assets/sounds/NEFFEX_Go.mp3',
   },
   {
     blocks: [
-      [0, 0, 0, 5, 0, 0, 0],
-      // [4, 4, 4, 4, 4, 4, 4],
-      // [3, 3, 3, 3, 3, 3, 3],
-      // [2, 2, 2, 2, 2, 2, 2],
+      [0, 4, 4, 5, 4, 4, 0],
+      [3, 3, 3, 3, 3, 3, 3],
+      [2, 2, 2, 2, 2, 2, 2],
+      [1, 1, 1, 5, 1, 1, 1],
     ],
     music: '/assets/sounds/NEFFEX_Numb.mp3',
   },
   {
     blocks: [
-      [1, 1, 1, 1, 1, 1, 1],
-      [2, 3, 4, 5, 4, 3, 2],
-      [3, 4, 5, 0, 5, 4, 3],
-      [4, 5, 0, 0, 0, 5, 4],
+      [ 4, 4, 4, 4, 4, 4, 4 ],
+      [ 4, 4, 3, 5, 3, 4, 4 ],
+      [ 1, 2, 3, 3, 3, 2, 1 ],
+      [ 1, 2, 2, 2, 2, 2, 1 ],
+      [ 1, 1, 1, 1, 1, 1, 1 ],
     ],
     music: '/assets/sounds/NEFFEX_Pro.mp3',
   },
@@ -53,15 +53,15 @@ const GameCanvas = () => {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [musicMuted, setMusicMuted] = useState(false);
 
-  const canvasWidth = 360;
+  const canvasWidth = 380;
   const canvasHeight = 640;
   const wallSize = 10;
-  const brickWidth = 45;
-  const brickHeight = 20;
-  const brickGap = 1;
+  const brickWidth = 52;
+  const brickHeight = 22;
+  const brickGap = 2;
 
-  const paddle = useRef({ x: 128, y: 600, width: 104, height: 24, dx: 0, speed: 4 }).current;
-  const ball = useRef({ x: 180, y: 580, radius: 10, dx: 0, dy: 0, speed: 4 }).current;
+  const paddle = useRef({ x: 128, y: 600, width: 104, height: 20, dx: 0, speed: 2 }).current;
+  const ball = useRef({ x: 180, y: 580, radius: 13, dx: 0, dy: 0, speed: 2 }).current;
 
   const sounds = useRef({
     bounce: new Audio(bounceSound),
@@ -115,14 +115,16 @@ const GameCanvas = () => {
 
   const checkLevelCompletion = () => {
     if (bricksRef.current.every((brick) => brick.strength <= 0)) {
+      setLives(3);
       sounds.music.pause();
-      setCurrentLevel(() => {
-        const nextLevel = currentLevel + 1;
+      setCurrentLevel((prevLevel) => {
+        const nextLevel = prevLevel + 1;
         if (nextLevel < levels.length) {
+          sounds.music.pause(); // Останавливаем текущую музыку
           sounds.music = new Audio(levels[nextLevel].music);
           sounds.music.loop = true;
           if (!musicMuted) sounds.music.play();
-          loadLevel();
+          loadLevel(); // Загружаем следующий уровень
         } else {
           isGameRunningRef.current = false; // Игра завершена
         }
@@ -132,8 +134,8 @@ const GameCanvas = () => {
   };
 
   const loseLife = () => {
-    setLives(() => {
-      const newLives = lives - 1;
+    setLives((prevLives) => {
+      const newLives = prevLives - 1;
       if (newLives > 0) {
         resetBall(); // Перезапуск мяча только при оставшихся жизнях
       } else {
@@ -153,12 +155,12 @@ const GameCanvas = () => {
   const applyExplosion = (brickIndex) => {
     const explosionTargets = [-1, 1, -7, 7, -8, -6, 6, 8];
     const newBricks = [...bricksRef.current];
-  
+
     const explode = (index) => {
       const brick = newBricks[index];
       if (brick && brick.strength > 0) {
         brick.strength = 0; // Уничтожаем взрывной блок
-        setScore((prev) => lives === 3 ? prev + 20 : prev + 10);
+        setScore((prev) => prev + 10);
         explosionTargets.forEach(offset => {
           const neighborIndex = index + offset;
           const neighborBrick = newBricks[neighborIndex];
@@ -171,29 +173,29 @@ const GameCanvas = () => {
         });
       }
     };
-  
+
     explode(brickIndex);
     bricksRef.current = newBricks;
     sounds.explosion.play();
   };
-  
+
   const loop = () => {
     const context = contextRef.current;
-
+  
     // Очищаем экран
     context.clearRect(0, 0, canvasWidth, canvasHeight);
-
+  
     // Обновление платформы
     paddle.x += paddle.dx;
     if (paddle.x < wallSize) paddle.x = wallSize;
     if (paddle.x + paddle.width > canvasWidth - wallSize)
       paddle.x = canvasWidth - wallSize - paddle.width;
-
+  
     // Логика мяча
     if (!ballOnPaddleRef.current) {
       ball.x += ball.dx;
       ball.y += ball.dy;
-
+  
       // Столкновение со стенами
       if (ball.x - ball.radius < wallSize || ball.x + ball.radius > canvasWidth - wallSize) {
         ball.dx *= -1;
@@ -203,9 +205,10 @@ const GameCanvas = () => {
       }
       if (ball.y > canvasHeight) {
         loseLife(); // Потеря жизни
+        resetBall(); // сбрасываем мяч на платформу
         return; // Выходим из текущего кадра для запуска новой итерации цикла в случае потери жизни
       }
-
+  
       // Столкновение с платформой
       if (
         ball.y + ball.radius > paddle.y &&
@@ -213,12 +216,13 @@ const GameCanvas = () => {
         ball.x < paddle.x + paddle.width
       ) {
         const hitPosition = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
-        ball.dy = -Math.abs(ball.dy);
-        ball.dx = hitPosition * ball.speed;
+        const angle = hitPosition * Math.PI / 3; // Максимальный угол отражения 60 градусов
+        ball.dy = -ball.speed * Math.cos(angle);
+        ball.dx = ball.speed * Math.sin(angle);
         sounds.bounce.currentTime = 0;
         sounds.bounce.play();
       }
-
+  
       // Столкновение с блоками
       bricksRef.current.forEach((brick, index) => {
         if (
@@ -245,18 +249,18 @@ const GameCanvas = () => {
       ball.x = paddle.x + paddle.width / 2;
       ball.y = paddle.y - ball.radius;
     }
-
+  
     // Рисуем стены
     context.fillStyle = "grey";
     context.fillRect(0, 0, canvasWidth, wallSize);
-
+  
     // Рисуем блоки
     bricksRef.current.forEach((brick) => {
       if (brick.strength > 0) {
         context.drawImage(blockImages[brick.strength], brick.x, brick.y, brick.width, brick.height);
       }
     });
-
+  
     // Рисуем платформу и мяч
     context.drawImage(paddleImage, paddle.x, paddle.y, paddle.width, paddle.height);
     context.drawImage(
@@ -266,32 +270,32 @@ const GameCanvas = () => {
       ball.radius * 2,
       ball.radius * 2
     );
-
+  
     // Завершаем игру при жизнях 0
     if (isGameRunningRef.current) {
       requestAnimationFrame(loop); // Продолжаем цикл
     } else {
-      // Добавить экран завершения игры
       context.fillStyle = "black";
       context.fillRect(0, 0, canvasWidth, canvasHeight);
       context.fillStyle = "white";
       context.font = "24px Arial";
       context.textAlign = "center";
-      context.fillText("Игра окончена!", canvasWidth / 2, canvasHeight / 2);
+      context.fillText("Игре конец!", canvasWidth / 2, canvasHeight / 2);
+      
       return;
     }
   };
-
+  
   useEffect(() => {
     const canvas = canvasRef.current;
     contextRef.current = canvas.getContext("2d");
-
+  
     sounds.music.loop = true;
     if (!musicMuted) sounds.music.play();
-
-    if ( lives === 3 ) loadLevel();
+  
+    if (lives === 3) loadLevel();
     resetBall();
-
+  
     const handleKeyDown = (e) => {
       if (e.key === "ArrowLeft") paddle.dx = -paddle.speed;
       if (e.key === "ArrowRight") paddle.dx = paddle.speed;
@@ -300,16 +304,16 @@ const GameCanvas = () => {
         ballOnPaddleRef.current = false;
       }
     };
-
+  
     const handleKeyUp = () => {
       paddle.dx = 0;
     };
-
+  
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
-
+  
     loop();
-
+  
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
