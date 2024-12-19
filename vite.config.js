@@ -58,11 +58,11 @@ export default defineConfig({
   })],
   resolve: {
       alias: {
-      "@": path.join(__dirname, "/src/*"),
+      "@": path.join(__dirname, "/src"),
       components: path.join(__dirname, "/src/components"),
       ui: path.join(__dirname, "/src", "/components/ui"),
       pages: path.join(__dirname, "/src/pages"),
-      utils: path.join(__dirname, "/src/utils"),
+      constants: path.join(__dirname, "/src/constants"),
     },
   },
 })

@@ -1,45 +1,11 @@
+import levels from 'constants/levels'
+import blockPaths from 'constants/objects/blockPaths'
 import { useEffect, useRef, useState } from 'react'
 import ballSvg from "/assets/gameTextures/ball.svg"
-import blockSvg5 from "/assets/gameTextures/brick_bomb.svg"
-import blockSvg3 from "/assets/gameTextures/brick_cyan.svg"
-import blockSvg4 from "/assets/gameTextures/brick_green.svg"
-import blockSvg1 from "/assets/gameTextures/brick_orange.svg"
-import blockSvg2 from "/assets/gameTextures/brick_purple.svg"
 import paddleSvg from "/assets/gameTextures/paddle.svg"
 import explosionSound from '/assets/sounds/boom.wav'
 import bounceSound from '/assets/sounds/bounce.wav'
 import destroySound from '/assets/sounds/destroy.wav'
-
-const levels = [
-  {
-    blocks: [
-      [1, 1, 1, 1, 1, 1, 1],
-      [2, 3, 4, 5, 4, 3, 2],
-      [3, 4, 5, 0, 5, 4, 3],
-      [4, 5, 0, 0, 0, 5, 4],
-    ],
-    music: '/assets/sounds/NEFFEX_Go.mp3',
-  },
-  {
-    blocks: [
-      [0, 4, 4, 5, 4, 4, 0],
-      [3, 3, 3, 3, 3, 3, 3],
-      [2, 2, 2, 2, 2, 2, 2],
-      [1, 1, 1, 5, 1, 1, 1],
-    ],
-    music: '/assets/sounds/NEFFEX_Numb.mp3',
-  },
-  {
-    blocks: [
-      [ 4, 4, 4, 4, 4, 4, 4 ],
-      [ 4, 4, 3, 5, 3, 4, 4 ],
-      [ 1, 2, 3, 3, 3, 2, 1 ],
-      [ 1, 2, 2, 2, 2, 2, 1 ],
-      [ 1, 1, 1, 1, 1, 1, 1 ],
-    ],
-    music: '/assets/sounds/NEFFEX_Pro.mp3',
-  },
-];
 
 const GameCanvas = () => {
   const canvasRef = useRef(null);
@@ -71,11 +37,10 @@ const GameCanvas = () => {
   }).current;
 
   const blockImages = [null, new Image(), new Image(), new Image(), new Image(), new Image()];
-  blockImages[1].src = blockSvg1;
-  blockImages[2].src = blockSvg2;
-  blockImages[3].src = blockSvg3;
-  blockImages[4].src = blockSvg4;
-  blockImages[5].src = blockSvg5;
+
+  blockPaths.forEach((image, index) => {
+    blockImages[index + 1].src = image;
+  })
 
   const paddleImage = new Image();
   paddleImage.src = paddleSvg;
