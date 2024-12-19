@@ -9,15 +9,36 @@ import paddleSvg from "/assets/gameTextures/paddle.svg"
 import explosionSound from '/assets/sounds/boom.wav'
 import bounceSound from '/assets/sounds/bounce.wav'
 import destroySound from '/assets/sounds/destroy.wav'
-import backgroundMusic from '/assets/sounds/NEFFEX_Numb.mp3'
 
 const levels = [
-  [
-    [0, 4, 4, 5, 4, 4, 0],
-    [3, 3, 3, 3, 3, 3, 3],
-    [2, 2, 2, 2, 2, 2, 2],
-    [1, 1, 1, 5, 1, 1, 1],
-  ],
+  {
+    blocks: [
+      [0, 0, 0, 5, 0, 0, 0]
+      // [0, 5, 4, 5, 4, 5, 0],
+      // [3, 3, 3, 3, 3, 3, 3],
+      // [2, 5, 2, 2, 2, 5, 2],
+      // [1, 1, 1, 5, 1, 1, 1],
+    ],
+    music: '/assets/sounds/NEFFEX_Go.mp3',
+  },
+  {
+    blocks: [
+      [0, 0, 0, 5, 0, 0, 0],
+      // [4, 4, 4, 4, 4, 4, 4],
+      // [3, 3, 3, 3, 3, 3, 3],
+      // [2, 2, 2, 2, 2, 2, 2],
+    ],
+    music: '/assets/sounds/NEFFEX_Numb.mp3',
+  },
+  {
+    blocks: [
+      [1, 1, 1, 1, 1, 1, 1],
+      [2, 3, 4, 5, 4, 3, 2],
+      [3, 4, 5, 0, 5, 4, 3],
+      [4, 5, 0, 0, 0, 5, 4],
+    ],
+    music: '/assets/sounds/NEFFEX_Pro.mp3',
+  },
 ];
 
 const GameCanvas = () => {
@@ -29,6 +50,7 @@ const GameCanvas = () => {
 
   const [lives, setLives] = useState(3);
   const [score, setScore] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(0);
   const [musicMuted, setMusicMuted] = useState(false);
 
   const canvasWidth = 360;
@@ -39,14 +61,14 @@ const GameCanvas = () => {
   const brickGap = 1;
 
   const paddle = useRef({ x: 128, y: 600, width: 104, height: 24, dx: 0, speed: 4 }).current;
-  const ball = useRef({ x: 180, y: 580, radius: 10, dx: 0, dy: 0, speed: 6 }).current;
+  const ball = useRef({ x: 180, y: 580, radius: 10, dx: 0, dy: 0, speed: 4 }).current;
 
-  const sounds = {
+  const sounds = useRef({
     bounce: new Audio(bounceSound),
     destroy: new Audio(destroySound),
     explosion: new Audio(explosionSound),
-    music: new Audio(backgroundMusic),
-  };
+    music: new Audio(levels[0].music),
+  }).current;
 
   const blockImages = [null, new Image(), new Image(), new Image(), new Image(), new Image()];
   blockImages[1].src = blockSvg1;
@@ -62,12 +84,13 @@ const GameCanvas = () => {
   ballImage.src = ballSvg;
 
   const loadLevel = () => {
-    const cols = levels[0][0].length;
+    const level = levels[currentLevel];
+    const cols = level.blocks[0].length;
     const totalBrickWidth = cols * (brickWidth + brickGap) - brickGap;
     const startX = (canvasWidth - totalBrickWidth) / 2;
-
+  
     bricksRef.current = [];
-    levels[0].forEach((row, rowIndex) => {
+    level.blocks.forEach((row, rowIndex) => {
       row.forEach((strength, colIndex) => {
         if (strength > 0) {
           bricksRef.current.push({
@@ -90,11 +113,22 @@ const GameCanvas = () => {
     ballOnPaddleRef.current = true;
   };
 
-  const toggleMusic = () => {
-    setMusicMuted((prevMuted) => {
-      sounds.music.muted = !prevMuted;
-      return !prevMuted;
-    });
+  const checkLevelCompletion = () => {
+    if (bricksRef.current.every((brick) => brick.strength <= 0)) {
+      sounds.music.pause();
+      setCurrentLevel(() => {
+        const nextLevel = currentLevel + 1;
+        if (nextLevel < levels.length) {
+          sounds.music = new Audio(levels[nextLevel].music);
+          sounds.music.loop = true;
+          if (!musicMuted) sounds.music.play();
+          loadLevel();
+        } else {
+          isGameRunningRef.current = false; // Игра завершена
+        }
+        return nextLevel;
+      });
+    }
   };
 
   const loseLife = () => {
@@ -109,35 +143,57 @@ const GameCanvas = () => {
     });
   };
 
+  const toggleMusic = () => {
+    setMusicMuted((prevMuted) => {
+      sounds.music.muted = !prevMuted;
+      return !prevMuted;
+    });
+  };
+
   const applyExplosion = (brickIndex) => {
     const explosionTargets = [-1, 1, -7, 7, -8, -6, 6, 8];
-    explosionTargets.forEach((offset) => {
-      const neighbor = bricksRef.current[brickIndex + offset];
-      if (neighbor && neighbor.strength > 0) {
-        neighbor.strength -= 1;
-        if (neighbor.strength === 0) 
-          setScore((prev) => lives === 3 ? prev + 20 : prev + 10);
+    const newBricks = [...bricksRef.current];
+  
+    const explode = (index) => {
+      const brick = newBricks[index];
+      if (brick && brick.strength > 0) {
+        brick.strength = 0; // Уничтожаем взрывной блок
+        setScore((prev) => lives === 3 ? prev + 20 : prev + 10);
+        explosionTargets.forEach(offset => {
+          const neighborIndex = index + offset;
+          const neighborBrick = newBricks[neighborIndex];
+          if (neighborBrick && neighborBrick.strength > 0) {
+            neighborBrick.strength -= 1;
+            if (neighborBrick.strength === 0) {
+              setScore((prev) => prev + 10);
+            }
+          }
+        });
       }
-    });
+    };
+  
+    explode(brickIndex);
+    bricksRef.current = newBricks;
+    sounds.explosion.play();
   };
   
   const loop = () => {
     const context = contextRef.current;
-  
+
     // Очищаем экран
     context.clearRect(0, 0, canvasWidth, canvasHeight);
-  
+
     // Обновление платформы
     paddle.x += paddle.dx;
     if (paddle.x < wallSize) paddle.x = wallSize;
     if (paddle.x + paddle.width > canvasWidth - wallSize)
       paddle.x = canvasWidth - wallSize - paddle.width;
-  
+
     // Логика мяча
     if (!ballOnPaddleRef.current) {
       ball.x += ball.dx;
       ball.y += ball.dy;
-  
+
       // Столкновение со стенами
       if (ball.x - ball.radius < wallSize || ball.x + ball.radius > canvasWidth - wallSize) {
         ball.dx *= -1;
@@ -149,7 +205,7 @@ const GameCanvas = () => {
         loseLife(); // Потеря жизни
         return; // Выходим из текущего кадра для запуска новой итерации цикла в случае потери жизни
       }
-  
+
       // Столкновение с платформой
       if (
         ball.y + ball.radius > paddle.y &&
@@ -162,7 +218,7 @@ const GameCanvas = () => {
         sounds.bounce.currentTime = 0;
         sounds.bounce.play();
       }
-  
+
       // Столкновение с блоками
       bricksRef.current.forEach((brick, index) => {
         if (
@@ -174,14 +230,14 @@ const GameCanvas = () => {
         ) {
           ball.dy *= -1;
           if (brick.strength === 5) {
-            applyExplosion(index);
-            sounds.explosion.play();
+            applyExplosion(index); // Передаем индекс текущего кирпича
           } else {
             sounds.destroy.currentTime = 0;
             sounds.destroy.play();
           }
-          brick.strength -= 1;
+          brick.strength -= 1; // Уменьшаем прочность текущего блока
           if (brick.strength === 0) setScore((prev) => prev + 10);
+          checkLevelCompletion();
         }
       });
     } else {
@@ -189,18 +245,18 @@ const GameCanvas = () => {
       ball.x = paddle.x + paddle.width / 2;
       ball.y = paddle.y - ball.radius;
     }
-  
+
     // Рисуем стены
     context.fillStyle = "grey";
     context.fillRect(0, 0, canvasWidth, wallSize);
-  
+
     // Рисуем блоки
     bricksRef.current.forEach((brick) => {
       if (brick.strength > 0) {
         context.drawImage(blockImages[brick.strength], brick.x, brick.y, brick.width, brick.height);
       }
     });
-  
+
     // Рисуем платформу и мяч
     context.drawImage(paddleImage, paddle.x, paddle.y, paddle.width, paddle.height);
     context.drawImage(
@@ -210,7 +266,7 @@ const GameCanvas = () => {
       ball.radius * 2,
       ball.radius * 2
     );
-  
+
     // Завершаем игру при жизнях 0
     if (isGameRunningRef.current) {
       requestAnimationFrame(loop); // Продолжаем цикл
@@ -225,14 +281,15 @@ const GameCanvas = () => {
       return;
     }
   };
-  
+
   useEffect(() => {
     const canvas = canvasRef.current;
     contextRef.current = canvas.getContext("2d");
-    
-    if(lives === 3)
-      loadLevel();
 
+    sounds.music.loop = true;
+    if (!musicMuted) sounds.music.play();
+
+    if ( lives === 3 ) loadLevel();
     resetBall();
 
     const handleKeyDown = (e) => {
@@ -257,7 +314,7 @@ const GameCanvas = () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
     };
-  }, [lives]);
+  }, [currentLevel, lives]);
 
   return (
     <div>
